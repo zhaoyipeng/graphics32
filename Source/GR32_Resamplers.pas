@@ -43,11 +43,7 @@ interface
 {$ENDIF}
 
 uses
-{$IFDEF FPC}
-  LCLIntf,
-{$ELSE}
-  Windows, Types,
-{$ENDIF}
+  Types,
   Classes, SysUtils, GR32, GR32_Transforms, GR32_Containers,
   GR32_OrdinalMaps, GR32_Blend;
 
@@ -57,7 +53,7 @@ procedure BlockTransfer(
   CombineOp: TDrawMode; CombineCallBack: TPixelCombineEvent = nil);
 
 procedure BlockTransferX(
-  Dst: TCustomBitmap32; DstX, DstY: TFixed; 
+  Dst: TCustomBitmap32; DstX, DstY: TFixed;
   Src: TCustomBitmap32; SrcRect: TRect;
   CombineOp: TDrawMode; CombineCallBack: TPixelCombineEvent = nil);
 
@@ -375,7 +371,7 @@ type
   protected
     procedure AssignTo(Dst: TPersistent); override;
   public
-    constructor Create(ASampler: TCustomSampler); reintroduce; virtual; 
+    constructor Create(ASampler: TCustomSampler); reintroduce; virtual;
     procedure PrepareSampling; override;
     procedure FinalizeSampling; override;
     function HasBounds: Boolean; override;
@@ -1264,7 +1260,7 @@ begin
             for I := 0 to DstClipW - 1 do
               MapHorz^[I] := Round(SrcRect.Left + (I + DstClip.Left - DstRect.Left) * Scale);
           end;
-        
+
           Assert(MapHorz^[0] >= SrcRect.Left);
           Assert(MapHorz^[DstClipW - 1] < SrcRect.Right);
         end
@@ -1279,7 +1275,7 @@ begin
         begin
           DstLine := PColor32Array(Dst.PixelPtr[DstClip.Left, DstClip.Top]);
           OldSrcY := -1;
-        
+
           for J := 0 to DstClipH - 1 do
           begin
             if DstH <= 1 then
@@ -1288,7 +1284,7 @@ begin
               SrcY := Trunc(SrcRect.Top + (J + DstClip.Top - DstRect.Top) * Scale)
             else
               SrcY := Round(SrcRect.Top + (J + DstClip.Top - DstRect.Top) * Scale);
-            
+
             if SrcY <> OldSrcY then
             begin
               SrcLine := Src.ScanLine[SrcY];
@@ -1336,7 +1332,7 @@ begin
             end
             else
               SrcY := (SrcRect.Top + SrcRect.Bottom - 1) div 2;
-            
+
             if SrcY <> OldSrcY then
             begin
               SrcLine := Src.ScanLine[SrcY];
@@ -1522,17 +1518,17 @@ begin
     begin
       SrcLine := Src.ScanLine[MapVert[J].Pos];
       WY := MapVert[J].Weight;
-      SrcIndex := MapHorz[0].Pos;    
-      SrcPtr1 := @SrcLine[SrcIndex];    
-      SrcPtr2 := @SrcLine[SrcIndex + SrcW];    
-      for I := 0 to DstClipW - 1 do    
-      begin    
-        if SrcIndex <> MapHorz[I].Pos then    
-        begin    
-          SrcIndex := MapHorz[I].Pos;    
-          SrcPtr1 := @SrcLine[SrcIndex];    
-          SrcPtr2 := @SrcLine[SrcIndex + SrcW];    
-        end;    
+      SrcIndex := MapHorz[0].Pos;
+      SrcPtr1 := @SrcLine[SrcIndex];
+      SrcPtr2 := @SrcLine[SrcIndex + SrcW];
+      for I := 0 to DstClipW - 1 do
+      begin
+        if SrcIndex <> MapHorz[I].Pos then
+        begin
+          SrcIndex := MapHorz[I].Pos;
+          SrcPtr1 := @SrcLine[SrcIndex];
+          SrcPtr2 := @SrcLine[SrcIndex + SrcW];
+        end;
         C := Interpolator(MapHorz[I].Weight, WY, SrcPtr1, SrcPtr2);
         CombineCallBack(C, DstLine[I], Src.MasterAlpha);
       end;
@@ -3517,9 +3513,9 @@ begin
       Result := CombineReg(CombineReg(C1, C2, WX),
                            CombineReg(C3, C4, WX),
                            GAMMA_TABLE[((Y shr 8) and $FF) xor $FF]);
-      EMMS;  
-    end  
-    else  
+      EMMS;
+    end
+    else
       Result := 0; //Nothing really makes sense here, return zero
   end;
 end;

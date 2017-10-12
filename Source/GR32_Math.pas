@@ -873,7 +873,7 @@ function NextPowerOf2(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
   Result := 2;
-  while Value shr 1 > 0 do 
+  while Value shr 1 > 0 do
     Result := Result shl 1;
 {$ELSE}
 {$IFDEF FPC} assembler; nostackframe; {$ENDIF}

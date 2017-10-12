@@ -38,14 +38,7 @@ interface
 {$I GR32.inc}
 
 uses
-{$IFDEF FPC}
-  LCLIntf,
-  {$IFDEF Windows}
-    Windows,
-  {$ENDIF}
-{$ELSE}
-  Windows,
-{$ENDIF}
+  System.Types,
   Classes, GR32, GR32_Blend;
 
 type
@@ -183,6 +176,7 @@ var
 implementation
 
 uses
+  GR32_Common,
   Math, SysUtils, GR32_Math, GR32_System, GR32_LowLevel, GR32_Resamplers,
   GR32_Containers, GR32_OrdinalMaps;
 
@@ -296,9 +290,9 @@ begin
   if Assigned(FSampler) then
   begin
     FSampler.PrepareSampling;
-    IntersectRect(R, DstRect, Dst.BoundsRect);
+    GR32.IntersectRect(R, DstRect, Dst.BoundsRect);
     if FSampler.HasBounds then
-      IntersectRect(R, DstRect, MakeRect(FSampler.GetSampleBounds, rrOutside));
+      GR32.IntersectRect(R, DstRect, MakeRect(FSampler.GetSampleBounds, rrOutside));
     try
       DoRasterize(Dst, R);
     finally
@@ -721,7 +715,7 @@ begin
 
       // forward
       with COORDS[Dir] do P := Point(PLast.X + X, PLast.Y + Y);
-      if PtInRect(DstRect, P) and (not Visited[P.X, P.Y]) then
+      if GR32.PtInRect(DstRect, P) and (not Visited[P.X, P.Y]) then
       begin
         C := GetSample(P.X, P.Y);
         Diff := Intensity(ColorSub(C, CLast));
@@ -734,11 +728,11 @@ begin
 
       // left
       with COORDS[LEFT[Dir]] do P := Point(PLast.X + X, PLast.Y + Y);
-      if PtInRect(DstRect, P) and (not Visited[P.X, P.Y]) then
+      if GR32.PtInRect(DstRect, P) and (not Visited[P.X, P.Y]) then
       begin
         C := GetSample(P.X, P.Y);
         D := Intensity(ColorSub(C, CLast));
-        EMMS;        
+        EMMS;
         if D < Diff then
         begin
           NewDir := LEFT[Dir];
@@ -751,11 +745,11 @@ begin
 
       // right
       with COORDS[RIGHT[Dir]] do P := Point(PLast.X + X, PLast.Y + Y);
-      if PtInRect(DstRect, P) and (not Visited[P.X, P.Y]) then
+      if GR32.PtInRect(DstRect, P) and (not Visited[P.X, P.Y]) then
       begin
         C := GetSample(P.X, P.Y);
         D := Intensity(ColorSub(C, CLast));
-        EMMS;        
+        EMMS;
         if D < Diff then
         begin
           NewDir := RIGHT[Dir];

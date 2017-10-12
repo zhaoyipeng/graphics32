@@ -41,30 +41,12 @@ interface
 {$I GR32.inc}
 
 uses
-{$IFDEF FPC}
-  LCLIntf, LCLType,
-  {$IFDEF Windows}
-    Windows,
-  {$ENDIF}
-  {$IFDEF UNIX}
-    Unix, BaseUnix,
-  {$ENDIF}
-{$ELSE}
-  Windows,
-{$ENDIF}
   SysUtils;
 
 type
   TPerfTimer = class
   private
-{$IFDEF UNIX}
-  {$IFDEF FPC}
     FStart: Int64;
-  {$ENDIF}
-{$ENDIF}
-{$IFDEF Windows}
-    FFrequency, FPerformanceCountStart, FPerformanceCountStop: Int64;
-{$ENDIF}
   public
     procedure Start;
     function ReadNanoseconds: string;
@@ -106,21 +88,23 @@ var
 implementation
 
 uses
-  Forms, Classes, TypInfo;
+{$IF defined(MSWINDOWS)}
+Winapi.Windows
+{$ELSEIF defined(MACOS)}
+Macapi.Mach
+{$ELSEIF defined(POSIX)}
+Posix.Time
+{$ENDIF}
+  ,
+  Classes, TypInfo;
 
 var
   CPUFeaturesInitialized : Boolean = False;
   CPUFeaturesData: TCPUFeatures;
 
-{$IFDEF UNIX}
-{$IFDEF FPC}
 function GetTickCount: Cardinal;
-var
-  t : timeval;
 begin
-  fpgettimeofday(@t,nil);
-   // Build a 64 bit microsecond tick from the seconds and microsecond longints
-  Result := (Int64(t.tv_sec) * 1000000) + t.tv_usec;
+  Result := TThread.GetTickCount;
 end;
 
 
@@ -150,75 +134,12 @@ procedure TPerfTimer.Start;
 begin
   FStart := GetTickCount;
 end;
-{$ENDIF}
-{$ENDIF}
-
-{$IFDEF Windows}
-function GetTickCount: Cardinal;
-begin
-  Result := Windows.GetTickCount;
-end;
 
 
-{ TPerfTimer }
-
-function TPerfTimer.ReadNanoseconds: string;
-begin
-  QueryPerformanceCounter(FPerformanceCountStop);
-  QueryPerformanceFrequency(FFrequency);
-  Assert(FFrequency > 0);
-
-  Result := IntToStr(Round(1000000 * (FPerformanceCountStop - FPerformanceCountStart) / FFrequency));
-end;
-
-function TPerfTimer.ReadMilliseconds: string;
-begin
-  QueryPerformanceCounter(FPerformanceCountStop);
-  QueryPerformanceFrequency(FFrequency);
-  Assert(FFrequency > 0);
-
-  Result := FloatToStrF(1000 * (FPerformanceCountStop - FPerformanceCountStart) / FFrequency, ffFixed, 15, 3);
-end;
-
-function TPerfTimer.ReadSeconds: String;
-begin
-  QueryPerformanceCounter(FPerformanceCountStop);
-  QueryPerformanceFrequency(FFrequency);
-  Result := FloatToStrF((FPerformanceCountStop - FPerformanceCountStart) / FFrequency, ffFixed, 15, 3);
-end;
-
-function TPerfTimer.ReadValue: Int64;
-begin
-  QueryPerformanceCounter(FPerformanceCountStop);
-  QueryPerformanceFrequency(FFrequency);
-  Assert(FFrequency > 0);
-
-  Result := Round(1000000 * (FPerformanceCountStop - FPerformanceCountStart) / FFrequency);
-end;
-
-procedure TPerfTimer.Start;
-begin
-  QueryPerformanceCounter(FPerformanceCountStart);
-end;
-{$ENDIF}
-
-{$IFDEF UNIX}
-{$IFDEF FPC}
 function GetProcessorCount: Cardinal;
 begin
   Result := 1;
 end;
-{$ENDIF}
-{$ENDIF}
-{$IFDEF Windows}
-function GetProcessorCount: Cardinal;
-var
-  lpSysInfo: TSystemInfo;
-begin
-  GetSystemInfo(lpSysInfo);
-  Result := lpSysInfo.dwNumberOfProcessors;
-end;
-{$ENDIF}
 
 {$IFNDEF PUREPASCAL}
 const

@@ -15,7 +15,7 @@ unit GR32_VectorUtils;
  *
  * Alternatively, the contents of this file may be used under the terms of the
  * Free Pascal modified version of the GNU Lesser General Public License
- * Version 2.1 (the "FPC modified LGPL License"), in which case the provisions
+ * Version 2.1 (the "FPC modified LGPL License"), in which case the provisions  `
  * of this license are applicable instead of those above.
  * Please see the file LICENSE.txt for additional information concerning this
  * license.
@@ -39,7 +39,7 @@ interface
 {$BOOLEVAL OFF}
 
 uses
-  GR32, GR32_Transforms, GR32_Polygons{$IFDEF FPC}, Types{$ENDIF};
+  GR32, GR32_Transforms, GR32_Polygons, Types, Math;
 
 const
   DEFAULT_MITER_LIMIT = 4.0;
@@ -218,7 +218,7 @@ function FloatPointToFixedPoint(const Points: TArrayOfArrayOfFloatPoint): TArray
 implementation
 
 uses
-  Math, SysUtils, GR32_Math, GR32_Geometry, GR32_LowLevel;
+  SysUtils, GR32_Math, GR32_Geometry, GR32_LowLevel;
 
 type
   TTransformationAccess = class(TTransformation);
@@ -1828,7 +1828,7 @@ var
     CX := X1 + X2;
     CY := Y1 + Y2;
 
-    R := X1 * CX + Y1 * CY; //(1 - cos(ß))  (range: 0 <= R <= 2)
+    R := X1 * CX + Y1 * CY; //(1 - cos(?)  (range: 0 <= R <= 2)
     if R < RMin then
     begin
       AddPoint(Delta * X1, Delta * Y1);
@@ -1913,9 +1913,9 @@ begin
 
   if Length(Points) <= 1 then Exit;
 
-  //MiterLimit = Sqrt(2/(1 - cos(ß)))
-  //Sqr(MiterLimit) = 2/(1 - cos(ß))
-  //1 - cos(ß) = 2/Sqr(MiterLimit) = RMin;
+  //MiterLimit = Sqrt(2/(1 - cos(?))
+  //Sqr(MiterLimit) = 2/(1 - cos(?)
+  //1 - cos(? = 2/Sqr(MiterLimit) = RMin;
   RMin := 2 / Sqr(MiterLimit);
 
   H := High(Points) - Ord(not Closed);
@@ -2001,7 +2001,7 @@ var
     CX := X1 + X2;
     CY := Y1 + Y2;
 
-    R := FixedMul(X1, CX) + FixedMul(Y1, CY); //(1 - cos(ß))  (range: 0 <= R <= 2)
+    R := FixedMul(X1, CX) + FixedMul(Y1, CY); //(1 - cos(?)  (range: 0 <= R <= 2)
     if R < RMin then
     begin
       AddPoint(FixedMul(D, X1), FixedMul(D, Y1));
@@ -2082,9 +2082,9 @@ begin
 
   D := Delta;
 
-  //MiterLimit = Sqrt(2/(1 - cos(ß)))
-  //Sqr(MiterLimit) = 2/(1 - cos(ß))
-  //1 - cos(ß) = 2/Sqr(MiterLimit) = RMin;
+  //MiterLimit = Sqrt(2/(1 - cos(?))
+  //Sqr(MiterLimit) = 2/(1 - cos(?)
+  //1 - cos(? = 2/Sqr(MiterLimit) = RMin;
   RMin := FixedDiv($20000, FixedSqr(MiterLimit));
 
   H := High(Points) - Ord(not Closed);

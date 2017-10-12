@@ -43,10 +43,13 @@ interface
 {$I GR32.inc}
 
 uses
-  {$IFDEF FPC} LCLIntf, LCLType, Types, {$ELSE}
-  {$IFDEF COMPILERXE2_UP}Types, {$ENDIF} Windows, {$ENDIF}
-  Controls, Graphics, Classes, SysUtils;
-  
+  System.Types,
+  System.UITypes,
+  System.Classes,
+  System.SysUtils,
+  FMX.Controls,
+  FMX.Graphics;
+
 { Version Control }
 
 const
@@ -250,7 +253,6 @@ const
   clTrBlue32              = TColor32($7F0000FF);
 
 // Color construction and conversion functions
-function Color32(WinColor: TColor): TColor32; overload;
 function Color32(R, G, B: Byte; A: Byte = $FF): TColor32; overload;
 function Color32(Index: Byte; var Palette: TPalette32): TColor32; overload;
 function Gray32(Intensity: Byte; Alpha: Byte = $FF): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -360,10 +362,12 @@ function Fixed(I: Integer): TFixed; overload; {$IFDEF USEINLINING} inline; {$END
 { Points }
 
 type
+{$IFNDEF GR32_FMX}
 {$IFNDEF FPC}
 {$IFNDEF BCB}
   PPoint = ^TPoint;
   TPoint = Windows.TPoint;
+{$ENDIF}
 {$ENDIF}
 {$ENDIF}
 
@@ -456,9 +460,11 @@ function FixedPoint(const FP: TFloatPoint): TFixedPoint; overload; {$IFDEF USEIN
 { Rectangles }
 
 type
+{$IFNDEF GR32_FMX}
 {$IFNDEF FPC}
   PRect = Windows.PRect;
   TRect = Windows.TRect;
+{$ENDIF}
 {$ENDIF}
 
   PFloatRect = ^TFloatRect;
@@ -585,7 +591,11 @@ type
     {$IFDEF FPC}
     FLock: TCriticalSection;
     {$ELSE}
+    {$IFDEF GR32_FMX}
+    FLock: TObject;
+    {$ELSE}
     FLock: TRTLCriticalSection;
+    {$ENDIF}
     {$ENDIF}
     property LockCount: Integer read FLockCount;
   public
@@ -775,12 +785,6 @@ type
     procedure LoadFromStream(Stream: TStream); virtual;
     procedure SaveToStream(Stream: TStream; SaveTopDown: Boolean = False); virtual;
 
-    procedure LoadFromFile(const FileName: string); virtual;
-    procedure SaveToFile(const FileName: string; SaveTopDown: Boolean = False); virtual;
-
-    procedure LoadFromResourceID(Instance: THandle; ResID: Integer);
-    procedure LoadFromResourceName(Instance: THandle; const ResName: string);
-
     procedure ResetAlpha; overload;
     procedure ResetAlpha(const AlphaValue: Byte); overload;
 
@@ -918,74 +922,58 @@ type
   end;
 
   TBitmap32 = class(TCustomBitmap32)
-  private
-    FOnHandleChanged: TNotifyEvent;
-      
-    procedure BackendChangedHandler(Sender: TObject); override;
-    procedure BackendChangingHandler(Sender: TObject); override;
-    
-    procedure FontChanged(Sender: TObject);
-    procedure CanvasChanged(Sender: TObject);
-    function GetCanvas: TCanvas;         {$IFDEF USEINLINING} inline; {$ENDIF}
-
-    function GetBitmapInfo: TBitmapInfo; {$IFDEF USEINLINING} inline; {$ENDIF}
-    function GetHandle: HBITMAP;         {$IFDEF USEINLINING} inline; {$ENDIF}
-    function GetHDC: HDC;                {$IFDEF USEINLINING} inline; {$ENDIF}
-
-    function GetFont: TFont;
-    procedure SetFont(Value: TFont);
   protected
     procedure FinalizeBackend; override;
     procedure SetBackend(const Backend: TCustomBackend); override;
 
-    procedure HandleChanged; virtual;
+//    procedure HandleChanged; virtual;
     procedure CopyPropertiesTo(Dst: TCustomBitmap32); override;
   public
     class function GetPlatformBackendClass: TCustomBackendClass; override;
 
-  {$IFDEF BCB}
-    procedure Draw(const DstRect, SrcRect: TRect; hSrc: Cardinal); overload;
-  {$ELSE}
-    procedure Draw(const DstRect, SrcRect: TRect; hSrc: HDC); overload;
-  {$ENDIF}
+//  {$IFDEF BCB}
+//    procedure Draw(const DstRect, SrcRect: TRect; hSrc: Cardinal); overload;
+//  {$ELSE}
+//    procedure Draw(const DstRect, SrcRect: TRect; hSrc: HDC); overload;
+//  {$ENDIF}
 
-{$IFDEF BCB}
-    procedure DrawTo(hDst: Cardinal; DstX, DstY: Integer); overload;
-    procedure DrawTo(hDst: Cardinal; const DstRect, SrcRect: TRect); overload;
-    procedure TileTo(hDst: Cardinal; const DstRect, SrcRect: TRect);
-{$ELSE}
-    procedure DrawTo(hDst: HDC; DstX: Integer = 0; DstY: Integer = 0); overload;
-    procedure DrawTo(hDst: HDC; const DstRect, SrcRect: TRect); overload;
-    procedure TileTo(hDst: HDC; const DstRect, SrcRect: TRect);
-{$ENDIF}
+//{$IFDEF BCB}
+//    procedure DrawTo(hDst: Cardinal; DstX, DstY: Integer); overload;
+//    procedure DrawTo(hDst: Cardinal; const DstRect, SrcRect: TRect); overload;
+//    procedure TileTo(hDst: Cardinal; const DstRect, SrcRect: TRect);
+//{$ELSE}
+//    procedure DrawTo(hDst: HDC; DstX: Integer = 0; DstY: Integer = 0); overload;
+//    procedure DrawTo(hDst: HDC; const DstRect, SrcRect: TRect); overload;
+//    procedure TileTo(hDst: HDC; const DstRect, SrcRect: TRect);
+//{$ENDIF}
 
-    procedure UpdateFont;
-    procedure Textout(X, Y: Integer; const Text: string); overload;
-    procedure Textout(X, Y: Integer; const ClipRect: TRect; const Text: string); overload;
-    procedure Textout(var DstRect: TRect; const Flags: Cardinal; const Text: string); overload;
-    function  TextExtent(const Text: string): TSize;
-    function  TextHeight(const Text: string): Integer;
-    function  TextWidth(const Text: string): Integer;
-    procedure RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32);
-    procedure TextoutW(X, Y: Integer; const Text: Widestring); overload;
-    procedure TextoutW(X, Y: Integer; const ClipRect: TRect; const Text: Widestring); overload;
-    procedure TextoutW(var DstRect: TRect; const Flags: Cardinal; const Text: Widestring); overload;
-    function  TextExtentW(const Text: Widestring): TSize;
-    function  TextHeightW(const Text: Widestring): Integer;
-    function  TextWidthW(const Text: Widestring): Integer;
-    procedure RenderTextW(X, Y: Integer; const Text: Widestring; AALevel: Integer; Color: TColor32);
+//    procedure UpdateFont;
+//    procedure Textout(X, Y: Integer; const Text: string); overload;
+//    procedure Textout(X, Y: Integer; const ClipRect: TRect; const Text: string); overload;
+//    procedure Textout(var DstRect: TRect; const Flags: Cardinal; const Text: string); overload;
+//    function  TextExtent(const Text: string): TSize;
+//    function  TextHeight(const Text: string): Integer;
+//    function  TextWidth(const Text: string): Integer;
+//    procedure RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32);
+//    procedure TextoutW(X, Y: Integer; const Text: Widestring); overload;
+//    procedure TextoutW(X, Y: Integer; const ClipRect: TRect; const Text: Widestring); overload;
+//    procedure TextoutW(var DstRect: TRect; const Flags: Cardinal; const Text: Widestring); overload;
+//    function  TextExtentW(const Text: Widestring): TSize;
+//    function  TextHeightW(const Text: Widestring): Integer;
+//    function  TextWidthW(const Text: Widestring): Integer;
+//    procedure RenderTextW(X, Y: Integer; const Text: Widestring; AALevel: Integer; Color: TColor32);
 
-    property  Canvas: TCanvas read GetCanvas;
-    function  CanvasAllocated: Boolean;
-    procedure DeleteCanvas;
+//    property  Canvas: TCanvas read GetCanvas;
+//    function  CanvasAllocated: Boolean;
+//    procedure DeleteCanvas;
 
-    property Font: TFont read GetFont write SetFont;
-
-    property BitmapHandle: HBITMAP read GetHandle;
-    property BitmapInfo: TBitmapInfo read GetBitmapInfo;
-    property Handle: HDC read GetHDC;
+//    property Font: TFont read GetFont write SetFont;
+//
+//    property BitmapHandle: HBITMAP read GetHandle;
+//    property BitmapInfo: TBitmapInfo read GetBitmapInfo;
+//    property Handle: HDC read GetHDC;
   published
-    property OnHandleChanged: TNotifyEvent read FOnHandleChanged write FOnHandleChanged;
+//    property OnHandleChanged: TNotifyEvent read FOnHandleChanged write FOnHandleChanged;
   end;
 
   { TCustomBackend }
@@ -1084,26 +1072,9 @@ resourcestring
 implementation
 
 uses
-  Math, GR32_Blend, GR32_LowLevel, GR32_Math, GR32_Resamplers,
-  GR32_Containers, GR32_Backends, GR32_Backends_Generic,
-{$IFDEF FPC}
-  Clipbrd,
-  {$IFDEF LCLWin32}
-    GR32_Backends_LCL_Win,
-  {$ENDIF}
-  {$IF defined(LCLGtk) or defined(LCLGtk2)}
-    GR32_Backends_LCL_Gtk,
-  {$IFEND}
-  {$IFDEF LCLCarbon}
-    GR32_Backends_LCL_Carbon,
-  {$ENDIF}
-  {$IFDEF LCLCustomDrawn}
-    GR32_Backends_LCL_CustomDrawn,
-  {$ENDIF}
-{$ELSE}
-  Clipbrd, GR32_Backends_VCL,
-{$ENDIF}
-  GR32_VectorUtils;
+  GR32_Common, Math, GR32_Blend, GR32_LowLevel, GR32_Math, GR32_Resamplers,
+  GR32_Containers,
+  GR32_VectorUtils, GR32_Backends_Generic;
 
 type
   { We can not use the Win32 defined record here since we are cross-platform. }
@@ -1125,8 +1096,6 @@ type
     biClrImportant: LongInt;
   end;
 
-  TGraphicAccess = class(TGraphic);
-
 const
   ZERO_RECT: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
 
@@ -1138,38 +1107,6 @@ const
 {$IFDEF TARGET_X64}
 {$DEFINE USENATIVECODE}
 {$ENDIF}
-
-function Color32(WinColor: TColor): TColor32; overload;
-{$IFDEF WIN_COLOR_FIX}
-var
-  I: Longword;
-{$ENDIF}
-begin
-  if WinColor < 0 then WinColor := GetSysColor(WinColor and $000000FF);
-
-{$IFDEF WIN_COLOR_FIX}
-  Result := $FF000000;
-  I := (WinColor and $00FF0000) shr 16;
-  if I <> 0 then Result := Result or TColor32(Integer(I) - 1);
-  I := WinColor and $0000FF00;
-  if I <> 0 then Result := Result or TColor32(Integer(I) - $00000100);
-  I := WinColor and $000000FF;
-  if I <> 0 then Result := Result or TColor32(Integer(I) - 1) shl 16;
-{$ELSE}
-{$IFDEF USENATIVECODE}
-  Result := $FF shl 24 + (WinColor and $FF0000) shr 16 + (WinColor and $FF00) +
-    (WinColor and $FF) shl 16;
-{$ELSE}
-  asm
-        MOV     EAX,WinColor
-        BSWAP   EAX
-        MOV     AL,$FF
-        ROR     EAX,8
-        MOV     Result,EAX
-  end;
-{$ENDIF}
-{$ENDIF}
-end;
 
 function Color32(R, G, B: Byte; A: Byte = $FF): TColor32; overload;
 {$IFDEF USENATIVECODE}
@@ -1236,7 +1173,7 @@ begin
   R := (Color32 and $00FF0000) shr 16;
   G := (Color32 and $0000FF00) shr 8;
   B := Color32 and $000000FF;
-end; 
+end;
 
 function Color32Components(R, G, B, A: Boolean): TColor32Components;
 const
@@ -1465,7 +1402,7 @@ begin
   begin
     Result := Gray32(Trunc(V));
     Exit;
-  end;  
+  end;
 
   H := H - Floor(H);
   Tmp := 6 * H - Floor(6 * H);
@@ -1531,32 +1468,6 @@ begin
       H := H + 1;
   end;
 end;
-
-{ Palette conversion }
-
-function WinPalette(const P: TPalette32): HPALETTE;
-var
-  L: TMaxLogPalette;
-  L0: LOGPALETTE absolute L;
-  I: Cardinal;
-  Cl: TColor32;
-begin
-  L.palVersion := $300;
-  L.palNumEntries := 256;
-  for I := 0 to $FF do
-  begin
-    Cl := P[I];
-    with L.palPalEntry[I] do
-    begin
-      peFlags := 0;
-      peRed := RedComponent(Cl);
-      peGreen := GreenComponent(Cl);
-      peBlue := BlueComponent(Cl);
-    end;
-  end;
-  Result := CreatePalette(l0);
-end;
-
 
 { Fixed-point conversion routines }
 
@@ -1951,14 +1862,14 @@ end;
 function UnionRect(out Rect: TRect; const R1, R2: TRect): Boolean;
 begin
   Rect := R1;
-  if not IsRectEmpty(R2) then
+  if not GR32.IsRectEmpty(R2) then
   begin
     if R2.Left < R1.Left then Rect.Left := R2.Left;
     if R2.Top < R1.Top then Rect.Top := R2.Top;
     if R2.Right > R1.Right then Rect.Right := R2.Right;
     if R2.Bottom > R1.Bottom then Rect.Bottom := R2.Bottom;
   end;
-  Result := not IsRectEmpty(Rect);
+  Result := not GR32.IsRectEmpty(Rect);
   if not Result then Rect := ZERO_RECT;
 end;
 
@@ -2159,24 +2070,25 @@ end;
 
 constructor TThreadPersistent.Create;
 begin
-  InitializeCriticalSection(FLock);
+  FLock := TObject.Create;
+  TMonitor.Enter(FLock);
 end;
 
 destructor TThreadPersistent.Destroy;
 begin
-  DeleteCriticalSection(FLock);
+  FLock.Free;
   inherited;
 end;
 
 procedure TThreadPersistent.Lock;
 begin
   InterlockedIncrement(FLockCount);
-  EnterCriticalSection(FLock);
+  TMonitor.Enter(FLock);
 end;
 
 procedure TThreadPersistent.Unlock;
 begin
-  LeaveCriticalSection(FLock);
+  TMonitor.Exit(FLock);
   InterlockedDecrement(FLockCount);
 end;
 
@@ -2232,10 +2144,6 @@ function TCustomMap.SetSizeFrom(Source: TPersistent): Boolean;
 begin
   if Source is TCustomMap then
     Result := SetSize(TCustomMap(Source).Width, TCustomMap(Source).Height)
-  else if Source is TGraphic then
-    Result := SetSize(TGraphic(Source).Width, TGraphic(Source).Height)
-  else if Source is TControl then
-    Result := SetSize(TControl(Source).Width, TControl(Source).Height)
   else if Source = nil then
     Result := SetSize(0, 0)
   else
@@ -2376,7 +2284,7 @@ begin
     FBackend.OnChanging := BackendChangingHandler;
 
     EndUpdate;
-    
+
     FBackend.Changed;
     Changed;
   end;
@@ -2405,6 +2313,73 @@ begin
   // descendants can override this method.
 end;
 
+procedure TCustomBitmap32.Assign(Source: TPersistent);
+  procedure AssignFromBitmap(TargetBitmap: TCustomBitmap32; SrcBmp: TBitmap);
+  var
+    Data: TBitmapData;
+    I: Integer;
+    P1,P2: Pointer;
+  begin
+    TargetBitmap.SetSize(SrcBmp.Width, SrcBmp.Height);
+    SrcBmp.Map(TMapAccess.Read, Data);
+    try
+      for I := 0 to SrcBmp.Height-1 do
+      begin
+        P1 := Data.GetScanline(I);
+        P2 := Self.GetScanline(I);
+        Move(P1^, P2^, Data.BytesPerLine);
+      end;
+    finally
+      SrcBmp.Unmap(Data);
+    end;
+  end;
+begin
+  BeginUpdate;
+  try
+    if not Assigned(Source) then
+      SetSize(0, 0)
+    else if Source is TCustomBitmap32 then
+    begin
+      TCustomBitmap32(Source).CopyMapTo(Self);
+      TCustomBitmap32(Source).CopyPropertiesTo(Self);
+    end
+    else if Source is TBitmap then
+      AssignFromBitmap(Self, TBitmap(Source))
+    else
+      inherited; // default handler
+  finally;
+    EndUpdate;
+    Changed;
+  end;
+end;
+
+procedure TCustomBitmap32.AssignTo(Dst: TPersistent);
+  procedure AssignToBitmap(Bmp: TBitmap; SrcBitmap: TCustomBitmap32);
+  var
+    Data: TBitmapData;
+    I: Integer;
+    P1, P2: Pointer;
+  begin
+    Bmp.SetSize(SrcBitmap.Width, SrcBitmap.Height);
+    if SrcBitmap.Empty then Exit;
+    Bmp.Map(TMapAccess.Write, Data);
+    try
+      for I := 0 to SrcBitmap.Height-1 do
+      begin
+        P1 := SrcBitmap.GetScanLine(I);
+        P2 := Data.GetScanline(I);
+        Move(P1^, P2^, Data.BytesPerLine);
+      end;
+    finally
+      Bmp.Unmap(Data);
+    end;
+  end;
+begin
+  if Dst is TBitmap then
+    AssignToBitmap(TBitmap(Dst), Self)
+  else
+    inherited;
+end;
 procedure TCustomBitmap32.BackendChangedHandler(Sender: TObject);
 begin
   FBits := FBackend.Bits;
@@ -2435,252 +2410,6 @@ end;
 procedure TCustomBitmap32.Delete;
 begin
   SetSize(0, 0);
-end;
-
-procedure TCustomBitmap32.AssignTo(Dst: TPersistent);
-
-  procedure AssignToBitmap(Bmp: TBitmap; SrcBitmap: TCustomBitmap32);
-  var
-    SavedBackend: TCustomBackend;
-  begin
-    RequireBackendSupport(SrcBitmap, [IDeviceContextSupport], romOr, False, SavedBackend);
-    try
-      Bmp.HandleType := bmDIB;
-      Bmp.PixelFormat := pf32Bit;
-
-{$IFDEF COMPILER2009_UP}
-      Bmp.SetSize(SrcBitmap.Width, SrcBitmap.Height);
-{$ELSE}
-      Bmp.Width := SrcBitmap.Width;
-      Bmp.Height := SrcBitmap.Height;
-{$ENDIF}
-
-      if Supports(SrcBitmap.Backend, IFontSupport) then // this is optional
-        Bmp.Canvas.Font.Assign((SrcBitmap.Backend as IFontSupport).Font);
-
-      if SrcBitmap.Empty then Exit;
-
-      Bmp.Canvas.Lock;
-      try
-        (SrcBitmap.Backend as IDeviceContextSupport).DrawTo(Bmp.Canvas.Handle,
-          BoundsRect, BoundsRect)
-      finally
-        Bmp.Canvas.UnLock;
-      end;
-    finally
-      RestoreBackend(SrcBitmap, SavedBackend);
-    end;
-  end;
-
-var
-  Bmp: TBitmap;
-begin
-  if Dst is TPicture then
-    AssignToBitmap(TPicture(Dst).Bitmap, Self)
-  else if Dst is TBitmap then
-    AssignToBitmap(TBitmap(Dst), Self)
-  else if Dst is TClipboard then
-  begin
-    Bmp := TBitmap.Create;
-    try
-      AssignToBitmap(Bmp, Self);
-      TClipboard(Dst).Assign(Bmp);
-    finally
-      Bmp.Free;
-    end;
-  end
-  else
-    inherited;
-end;
-
-procedure TCustomBitmap32.Assign(Source: TPersistent);
-
-  procedure AssignFromGraphicPlain(TargetBitmap: TCustomBitmap32;
-    SrcGraphic: TGraphic; FillColor: TColor32; ResetAlphaAfterDrawing: Boolean);
-  var
-    SavedBackend: TCustomBackend;
-    Canvas: TCanvas;
-  begin
-    if not Assigned(SrcGraphic) then
-      Exit;
-    RequireBackendSupport(TargetBitmap, [IDeviceContextSupport, ICanvasSupport], romOr, True, SavedBackend);
-    try
-      TargetBitmap.SetSize(SrcGraphic.Width, SrcGraphic.Height);
-      if TargetBitmap.Empty then Exit;
-
-      TargetBitmap.Clear(FillColor);
-
-      if Supports(TargetBitmap.Backend, IDeviceContextSupport) then
-      begin
-        Canvas := TCanvas.Create;
-        try
-          Canvas.Lock;
-          try
-            Canvas.Handle := (TargetBitmap.Backend as IDeviceContextSupport).Handle;
-            TGraphicAccess(SrcGraphic).Draw(Canvas,
-              MakeRect(0, 0, TargetBitmap.Width, TargetBitmap.Height));
-          finally
-            Canvas.Unlock;
-          end;
-        finally
-          Canvas.Free;
-        end;
-      end else
-      if Supports(TargetBitmap.Backend, ICanvasSupport) then
-        TGraphicAccess(SrcGraphic).Draw((TargetBitmap.Backend as ICanvasSupport).Canvas,
-          MakeRect(0, 0, TargetBitmap.Width, TargetBitmap.Height))
-      else raise Exception.Create(RCStrInpropriateBackend);
-
-      if ResetAlphaAfterDrawing then
-        ResetAlpha;
-    finally
-      RestoreBackend(TargetBitmap, SavedBackend);
-    end;
-  end;
-
-  procedure AssignFromGraphicMasked(TargetBitmap: TCustomBitmap32; SrcGraphic: TGraphic);
-  var
-    TempBitmap: TCustomBitmap32;
-    I: integer;
-    DstP, SrcP: PColor32;
-    DstColor: TColor32;
-  begin
-    AssignFromGraphicPlain(TargetBitmap, SrcGraphic, clWhite32, False); // mask on white
-    if TargetBitmap.Empty then
-    begin
-      TargetBitmap.Clear;
-      Exit;
-    end;
-
-    TempBitmap := TCustomBitmap32.Create;
-    try
-      AssignFromGraphicPlain(TempBitmap, SrcGraphic, clRed32, False); // mask on red
-
-      DstP := @TargetBitmap.Bits[0];
-      SrcP := @TempBitmap.Bits[0];
-      for I := 0 to TargetBitmap.Width * TargetBitmap.Height - 1 do
-      begin
-        DstColor := DstP^ and $00FFFFFF;
-        // this checks for transparency by comparing the pixel-color of the
-        // temporary bitmap (red masked) with the pixel of our
-        // bitmap (white masked). if they match, make that pixel opaque
-        if DstColor = (SrcP^ and $00FFFFFF) then
-          DstP^ := DstColor or $FF000000
-        else
-        // if the colors do not match (that is the case if there is a
-        // match "is clRed32 = clWhite32 ?"), just make that pixel
-        // transparent:
-          DstP^ := DstColor;
-
-         Inc(SrcP); Inc(DstP);
-      end;
-    finally
-      TempBitmap.Free;
-    end;
-  end;
-
-  procedure AssignFromBitmap(TargetBitmap: TCustomBitmap32; SrcBmp: TBitmap);
-  var
-    TransparentColor: TColor32;
-    DstP: PColor32;
-    I: integer;
-    DstColor: TColor32;
-  begin
-    AssignFromGraphicPlain(TargetBitmap, SrcBmp, 0, SrcBmp.PixelFormat <> pf32bit);
-    if TargetBitmap.Empty then Exit;
-
-    if SrcBmp.Transparent then
-    begin
-      TransparentColor := Color32(SrcBmp.TransparentColor) and $00FFFFFF;
-      DstP := @TargetBitmap.Bits[0];
-      for I := 0 to TargetBitmap.Width * TargetBitmap.Height - 1 do
-      begin
-        DstColor := DstP^ and $00FFFFFF;
-        if DstColor = TransparentColor then
-          DstP^ := DstColor;
-        Inc(DstP);
-      end;
-    end;
-
-    if Supports(TargetBitmap.Backend, IFontSupport) then // this is optional
-      (TargetBitmap.Backend as IFontSupport).Font.Assign(SrcBmp.Canvas.Font);
-  end;
-
-  procedure AssignFromIcon(TargetBitmap: TCustomBitmap32; SrcIcon: TIcon);
-  var
-    I: Integer;
-    P: PColor32Entry;
-    ReassignFromMasked: Boolean;
-  begin
-    AssignFromGraphicPlain(TargetBitmap, SrcIcon, 0, False);
-    if TargetBitmap.Empty then Exit;
-
-    // Check if the icon was painted with a merged alpha channel.
-    // The happens transparently for new-style 32-bit icons.
-    // For all other bit depths GDI will reset our alpha channel to opaque.
-    ReassignFromMasked := True;
-    P := PColor32Entry(@TargetBitmap.Bits[0]);
-    for I := 0 to TargetBitmap.Height * TargetBitmap.Width - 1 do
-    begin
-      if P.A > 0 then
-      begin
-        ReassignFromMasked := False;
-        Break;
-      end;
-      Inc(P);
-    end;
-
-    // No alpha values found? Use masked approach...
-    if ReassignFromMasked then
-      AssignFromGraphicMasked(TargetBitmap, SrcIcon);
-  end;
-
-  procedure AssignFromGraphic(TargetBitmap: TCustomBitmap32; SrcGraphic: TGraphic);
-  begin
-    if SrcGraphic is TBitmap then
-      AssignFromBitmap(TargetBitmap, TBitmap(SrcGraphic))
-    else if SrcGraphic is TIcon then
-      AssignFromIcon(TargetBitmap, TIcon(SrcGraphic))
-{$IFNDEF PLATFORM_INDEPENDENT}
-    else if SrcGraphic is TMetaFile then
-      AssignFromGraphicMasked(TargetBitmap, SrcGraphic)
-{$ENDIF}
-    else
-      AssignFromGraphicPlain(TargetBitmap, SrcGraphic, clWhite32, True);
-  end;
-
-var
-  Picture: TPicture;
-begin
-  BeginUpdate;
-  try
-    if not Assigned(Source) then
-      SetSize(0, 0)
-    else if Source is TCustomBitmap32 then
-    begin
-      TCustomBitmap32(Source).CopyMapTo(Self);
-      TCustomBitmap32(Source).CopyPropertiesTo(Self);
-    end
-    else if Source is TGraphic then
-      AssignFromGraphic(Self, TGraphic(Source))
-    else if Source is TPicture then
-      AssignFromGraphic(Self, TPicture(Source).Graphic)
-    else if Source is TClipboard then
-    begin
-      Picture := TPicture.Create;
-      try
-        Picture.Assign(TClipboard(Source));
-        AssignFromGraphic(Self, Picture.Graphic);
-      finally
-        Picture.Free;
-      end;
-    end
-    else
-      inherited; // default handler
-  finally;
-    EndUpdate;
-    Changed;
-  end;
 end;
 
 procedure TCustomBitmap32.CopyMapTo(Dst: TCustomBitmap32);
@@ -2958,7 +2687,7 @@ begin
     cely := GAMMA_TABLE[flry xor $FF];
     flrx := GAMMA_TABLE[flrx];
     flry := GAMMA_TABLE[flry];
-    
+
     CombineMem(MergeReg(C, P^), P^, celx * cely shr 8); Inc(P);
     CombineMem(MergeReg(C, P^), P^, flrx * cely shr 8); Inc(P, FWidth);
     CombineMem(MergeReg(C, P^), P^, flrx * flry shr 8); Dec(P);
@@ -4430,7 +4159,7 @@ var
   ChangedRect: TRect;
 begin
   ChangedRect := MakeRect(FixedRect(X1, Y1, X2, Y2));
-  
+
   if not FMeasuringMode then
   begin
     sx := X1; sy := Y1; ex := X2; ey := Y2;
@@ -4930,7 +4659,7 @@ begin
       P := Pointer(@Bits[j * FWidth]);
       FillLongword(P[X1], X2 - X1, Value);
     end;
-    
+
   Changed(MakeRect(X1, Y1, X2, Y2));
 end;
 
@@ -5224,78 +4953,6 @@ begin
   end;
 end;
 
-procedure TCustomBitmap32.LoadFromFile(const FileName: string);
-var
-  FileStream: TFileStream;
-  Header: TBmpHeader;
-  P: TPicture;
-begin
-  FileStream := TFileStream.Create(Filename, fmOpenRead);
-  try
-    FileStream.ReadBuffer(Header, SizeOf(TBmpHeader));
-
-    // Check for Windows bitmap magic bytes...
-    if Header.bfType = $4D42 then
-    begin
-      // if it is, use our stream read method...
-      FileStream.Seek(-SizeOf(TBmpHeader), soFromCurrent);
-      LoadFromStream(FileStream);
-      Exit;
-    end
-  finally
-    FileStream.Free;
-  end;
-
-  // if we got here, use the fallback approach via TPicture...
-  P := TPicture.Create;
-  try
-    P.LoadFromFile(FileName);
-    Assign(P);
-  finally
-    P.Free;
-  end;
-end;
-
-procedure TCustomBitmap32.SaveToFile(const FileName: string; SaveTopDown: Boolean = False);
-var
-  FileStream: TFileStream;
-begin
-  FileStream := TFileStream.Create(Filename, fmCreate);
-  try
-    SaveToStream(FileStream, SaveTopDown);
-  finally
-    FileStream.Free;
-  end;
-end;
-
-procedure TCustomBitmap32.LoadFromResourceID(Instance: THandle; ResID: Integer);
-var
-  B: TBitmap;
-begin
-  B := TBitmap.Create;
-  try
-    B.LoadFromResourceID(Instance, ResID);
-    Assign(B);
-  finally
-    B.Free;
-    Changed;
-  end;
-end;
-
-procedure TCustomBitmap32.LoadFromResourceName(Instance: THandle; const ResName: string);
-var
-  B: TBitmap;
-begin
-  B := TBitmap.Create;
-  try
-    B.LoadFromResourceName(Instance, ResName);
-    Assign(B);
-  finally
-    B.Free;
-    Changed;
-  end;
-end;
-
 function TCustomBitmap32.Equal(B: TCustomBitmap32): Boolean;
 var
   S1, S2: TMemoryStream;
@@ -5451,8 +5108,8 @@ begin
   if FillBack then
   begin
     R := MakeRect(0, 0, Width, Height);
-    OffsetRect(R, Dx, Dy);
-    IntersectRect(R, R, MakeRect(0, 0, Width, Height));
+    GR32.OffsetRect(R, Dx, Dy);
+    GR32.IntersectRect(R, R, MakeRect(0, 0, Width, Height));
     if R.Top > 0 then
       FillRect(0, 0, Width, R.Top, FillColor)
     else
@@ -5679,11 +5336,11 @@ end;
 
 procedure TCustomBitmap32.SetClipRect(const Value: TRect);
 begin
-  IntersectRect(FClipRect, Value, BoundsRect);
+  GR32.IntersectRect(FClipRect, Value, BoundsRect);
   FFixedClipRect := FixedRect(FClipRect);
   with FClipRect do
     F256ClipRect := Rect(Left shl 8, Top shl 8, Right shl 8, Bottom shl 8);
-  FClipping := not EqualRect(FClipRect, BoundsRect);
+  FClipping := not GR32.EqualRect(FClipRect, BoundsRect);
   WrapProcHorz := GetWrapProcEx(WrapMode, FClipRect.Left, FClipRect.Right - 1);
   WrapProcVert := GetWrapProcEx(WrapMode, FClipRect.Top, FClipRect.Bottom - 1);
 end;
@@ -5760,308 +5417,26 @@ end;
 
 procedure TBitmap32.FinalizeBackend;
 begin
-  if Supports(Backend, IFontSupport) then
-    (Backend as IFontSupport).OnFontChange := nil;
-
-  if Supports(Backend, ICanvasSupport) then
-    (Backend as ICanvasSupport).OnCanvasChange := nil;
-
   inherited;
 end;
 
-procedure TBitmap32.BackendChangingHandler(Sender: TObject);
+class function TBitmap32.GetPlatformBackendClass: TCustomBackendClass;
 begin
-  inherited;
-  FontChanged(Self);
-  DeleteCanvas;
-end;
-
-procedure TBitmap32.BackendChangedHandler(Sender: TObject);
-begin
-  inherited;
-  HandleChanged;
-end;
-
-procedure TBitmap32.FontChanged(Sender: TObject);
-begin
-  // TODO: still required?
-end;
-
-procedure TBitmap32.CanvasChanged(Sender: TObject);
-begin
-  Changed;
+  Result := TMemoryBackend;
 end;
 
 procedure TBitmap32.CopyPropertiesTo(Dst: TCustomBitmap32);
 begin
   inherited;
-
-  if (Dst is TBitmap32) and
-    Supports(Dst.Backend, IFontSupport) and Supports(Self.Backend, IFontSupport) then
-    TBitmap32(Dst).Font.Assign(Self.Font);
-end;
-
-function TBitmap32.GetCanvas: TCanvas;
-begin
-  Result := (FBackend as ICanvasSupport).Canvas;
-end;
-
-function TBitmap32.GetBitmapInfo: TBitmapInfo;
-begin
-  Result := (FBackend as IBitmapContextSupport).BitmapInfo;
-end;
-
-function TBitmap32.GetHandle: HBITMAP;
-begin
-  Result := (FBackend as IBitmapContextSupport).BitmapHandle;
-end;
-
-function TBitmap32.GetHDC: HDC;
-begin
-  Result := (FBackend as IDeviceContextSupport).Handle;
-end;
-
-class function TBitmap32.GetPlatformBackendClass: TCustomBackendClass;
-begin
-{$IFDEF FPC}
-  Result := TLCLBackend;
-{$ELSE}
-  Result := TGDIBackend;
-{$ENDIF}
-end;
-
-function TBitmap32.GetFont: TFont;
-begin
-  Result := (FBackend as IFontSupport).Font;
 end;
 
 procedure TBitmap32.SetBackend(const Backend: TCustomBackend);
-var
-  FontSupport: IFontSupport;
-  CanvasSupport: ICanvasSupport;
 begin
   if Assigned(Backend) and (Backend <> FBackend) then
   begin
-    if Supports(Backend, IFontSupport, FontSupport) then
-      FontSupport.OnFontChange := FontChanged;
-
-    if Supports(Backend, ICanvasSupport, CanvasSupport) then
-      CanvasSupport.OnCanvasChange := CanvasChanged;
-
     inherited;
   end;
 end;
-
-procedure TBitmap32.SetFont(Value: TFont);
-begin
-  (FBackend as IFontSupport).Font := Value;
-end;
-
-procedure TBitmap32.HandleChanged;
-begin
-  if Assigned(FOnHandleChanged) then FOnHandleChanged(Self);
-end;
-
-{$IFDEF BCB}
-procedure TBitmap32.Draw(const DstRect, SrcRect: TRect; hSrc: Cardinal);
-{$ELSE}
-procedure TBitmap32.Draw(const DstRect, SrcRect: TRect; hSrc: HDC);
-{$ENDIF}
-begin
-  (FBackend as IDeviceContextSupport).Draw(DstRect, SrcRect, hSrc);
-end;
-
-procedure TBitmap32.DrawTo(hDst: {$IFDEF BCB}Cardinal{$ELSE}HDC{$ENDIF}; DstX, DstY: Integer);
-begin
-  if Empty then Exit;
-  (FBackend as IDeviceContextSupport).DrawTo(hDst, DstX, DstY);
-end;
-
-procedure TBitmap32.DrawTo(hDst: {$IFDEF BCB}Cardinal{$ELSE}HDC{$ENDIF}; const DstRect, SrcRect: TRect);
-begin
-  if Empty then Exit;
-  (FBackend as IDeviceContextSupport).DrawTo(hDst, DstRect, SrcRect);
-end;
-
-procedure TBitmap32.TileTo(hDst: {$IFDEF BCB}Cardinal{$ELSE}HDC{$ENDIF}; const DstRect, SrcRect: TRect);
-const
-  MaxTileSize = 1024;
-var
-  DstW, DstH: Integer;
-  TilesX, TilesY: Integer;
-  Buffer: TCustomBitmap32;
-  I, J: Integer;
-  ClipRect, R: TRect;
-  X, Y: Integer;
-begin
-  DstW := DstRect.Right - DstRect.Left;
-  DstH := DstRect.Bottom - DstRect.Top;
-  TilesX := (DstW + MaxTileSize - 1) div MaxTileSize;
-  TilesY := (DstH + MaxTileSize - 1) div MaxTileSize;
-  Buffer := TBitmap32.Create;
-  try
-    for J := 0 to TilesY - 1 do
-    begin
-      for I := 0 to TilesX - 1 do
-      begin
-        ClipRect.Left := I * MaxTileSize;
-        ClipRect.Top := J * MaxTileSize;
-        ClipRect.Right := (I + 1) * MaxTileSize;
-        ClipRect.Bottom := (J + 1) * MaxTileSize;
-        if ClipRect.Right > DstW then ClipRect.Right := DstW;
-        if ClipRect.Bottom > DstH then ClipRect.Bottom := DstH;
-        X := ClipRect.Left;
-        Y := ClipRect.Top;
-        OffsetRect(ClipRect, -X, -Y);
-        R := DstRect;
-        OffsetRect(R, -X - DstRect.Left, -Y - DstRect.Top);
-        Buffer.SetSize(ClipRect.Right, ClipRect.Bottom);
-        StretchTransfer(Buffer, R, ClipRect, Self, SrcRect, Resampler, DrawMode, FOnPixelCombine);
-
-        (Buffer.Backend as IDeviceContextSupport).DrawTo(hDst,
-          MakeRect(X + DstRect.Left, Y + DstRect.Top, X + ClipRect.Right,
-          Y + ClipRect.Bottom), MakeRect(0, 0, Buffer.Width, Buffer.Height)
-        );
-      end;
-    end;
-  finally
-    Buffer.Free;
-  end;
-end;
-
-procedure TBitmap32.UpdateFont;
-begin
-  (FBackend as IFontSupport).UpdateFont;
-end;
-
-// Text and Fonts //
-
-function TBitmap32.TextExtent(const Text: string): TSize;
-begin
-  Result := (FBackend as ITextSupport).TextExtent(Text);
-end;
-
-function TBitmap32.TextExtentW(const Text: Widestring): TSize;
-begin
-  Result := (FBackend as ITextSupport).TextExtentW(Text);
-end;
-
-// -------------------------------------------------------------------
-
-procedure TBitmap32.Textout(X, Y: Integer; const Text: string);
-begin
-  (FBackend as ITextSupport).Textout(X, Y, Text);
-end;
-
-procedure TBitmap32.TextoutW(X, Y: Integer; const Text: Widestring);
-begin
-  (FBackend as ITextSupport).TextoutW(X, Y, Text);
-end;
-
-// -------------------------------------------------------------------
-
-procedure TBitmap32.Textout(X, Y: Integer; const ClipRect: TRect; const Text: string);
-begin
-  (FBackend as ITextSupport).Textout(X, Y, ClipRect, Text);
-end;
-
-procedure TBitmap32.TextoutW(X, Y: Integer; const ClipRect: TRect; const Text: Widestring);
-begin
-  (FBackend as ITextSupport).TextoutW(X, Y, ClipRect, Text);
-end;
-
-// -------------------------------------------------------------------
-
-procedure TBitmap32.Textout(var DstRect: TRect; const Flags: Cardinal; const Text: string);
-begin
-  (FBackend as ITextSupport).Textout(DstRect, Flags, Text);
-end;
-
-procedure TBitmap32.TextoutW(var DstRect: TRect; const Flags: Cardinal; const Text: Widestring);
-begin
-  (FBackend as ITextSupport).TextoutW(DstRect, Flags, Text);
-end;
-
-// -------------------------------------------------------------------
-
-function TBitmap32.TextHeight(const Text: string): Integer;
-begin
-  Result := (FBackend as ITextSupport).TextExtent(Text).cY;
-end;
-
-function TBitmap32.TextHeightW(const Text: Widestring): Integer;
-begin
-  Result := (FBackend as ITextSupport).TextExtentW(Text).cY;
-end;
-
-// -------------------------------------------------------------------
-
-function TBitmap32.TextWidth(const Text: string): Integer;
-begin
-  Result := (FBackend as ITextSupport).TextExtent(Text).cX;
-end;
-
-function TBitmap32.TextWidthW(const Text: Widestring): Integer;
-begin
-  Result := (FBackend as ITextSupport).TextExtentW(Text).cX;
-end;
-
-// -------------------------------------------------------------------
-
-{$IFNDEF FPC}
-procedure SetFontAntialiasing(const Font: TFont; Quality: Cardinal);
-var
-  LogFont: TLogFont;
-begin
-  with LogFont do
-  begin
-    lfHeight := Font.Height;
-    lfWidth := 0; { have font mapper choose }
-
-    {$IFDEF COMPILER2005_UP}
-    lfEscapement := Font.Orientation;
-    lfOrientation := Font.Orientation;
-    {$ELSE}
-    lfEscapement := 0;
-    lfOrientation := 0;
-    {$ENDIF}
-
-    if fsBold in Font.Style then
-      lfWeight := FW_BOLD
-    else
-      lfWeight := FW_NORMAL;
-
-    lfItalic := Byte(fsItalic in Font.Style);
-    lfUnderline := Byte(fsUnderline in Font.Style);
-    lfStrikeOut := Byte(fsStrikeOut in Font.Style);
-    lfCharSet := Byte(Font.Charset);
-
-    // TODO DVT Added cast to fix TFontDataName to string warning. Need to verify is OK
-    if AnsiCompareText(Font.Name, 'Default') = 0 then  // do not localize
-      StrPCopy(lfFaceName, string(DefFontData.Name))
-    else
-      StrPCopy(lfFaceName, Font.Name);
-
-    lfQuality := Quality;
-
-    { Only True Type fonts support the angles }
-    if lfOrientation <> 0 then
-      lfOutPrecision := OUT_TT_ONLY_PRECIS
-    else
-      lfOutPrecision := OUT_DEFAULT_PRECIS;
-
-    lfClipPrecision := CLIP_DEFAULT_PRECIS;
-
-    case Font.Pitch of
-      fpVariable: lfPitchAndFamily := VARIABLE_PITCH;
-      fpFixed: lfPitchAndFamily := FIXED_PITCH;
-    else
-      lfPitchAndFamily := DEFAULT_PITCH;
-    end;
-  end;
-  Font.Handle := CreateFontIndirect(LogFont);
-end;
-{$ENDIF}
 
 procedure TextBlueToAlpha(const B: TCustomBitmap32; const Color: TColor32);
 (*
@@ -6130,186 +5505,6 @@ begin
       Inc(Dst);
     end;
   end;
-end;
-
-procedure TBitmap32.RenderText(X, Y: Integer; const Text: string; AALevel: Integer; Color: TColor32);
-var
-  B, B2: TBitmap32;
-  Sz: TSize;
-  Alpha: TColor32;
-  PaddedText: string;
-begin
-  if Empty then Exit;
-
-  Alpha := Color shr 24;
-  Color := Color and $00FFFFFF;
-  AALevel := Constrain(AALevel, -1, 4);
-  PaddedText := Text + ' ';
-
-  {$IFDEF FPC}
-  if AALevel > -1 then
-    Font.Quality := fqNonAntialiased
-  else
-    Font.Quality := fqAntialiased;
-  {$ELSE}
-  if AALevel > -1 then
-    SetFontAntialiasing(Font, NONANTIALIASED_QUALITY)
-  else
-    SetFontAntialiasing(Font, ANTIALIASED_QUALITY);
-  {$ENDIF}
-
-  { TODO : Optimize Clipping here }
-  B := TBitmap32.Create;
-  with B do
-  try
-    if AALevel <= 0 then
-    begin
-      Sz := Self.TextExtent(PaddedText);
-      if Sz.cX > Self.Width then Sz.cX := Self.Width;
-      if Sz.cY > Self.Height then Sz.cX := Self.Height;
-      SetSize(Sz.cX, Sz.cY);
-      Font := Self.Font;
-      Clear(0);
-      Font.Color := clWhite;
-      Textout(0, 0, Text);
-      TextBlueToAlpha(B, Color);
-    end
-    else
-    begin
-      B2 := TBitmap32.Create;
-      with B2 do
-      try
-        Font := Self.Font;
-        Font.Size := Self.Font.Size shl AALevel;
-        Font.Color := clWhite;
-        Sz := TextExtent(PaddedText);
-        Sz.Cx := Sz.cx + 1 shl AALevel;
-        Sz.Cy := Sz.cy + 1 shl AALevel;
-        SetSize(Sz.Cx, Sz.Cy);
-        Clear(0);
-        Textout(0, 0, Text);
-        B.SetSize(Sz.cx shr AALevel, Sz.cy shr AALevel);
-        TextScaleDown(B, B2, AALevel, Color);
-      finally
-        Free;
-      end;
-    end;
-
-    DrawMode := dmBlend;
-    MasterAlpha := Alpha;
-    CombineMode := CombineMode;
-
-    DrawTo(Self, X, Y);
-  finally
-    Free;
-  end;
-
-  {$IFDEF FPC}
-  Font.Quality := fqDefault;
-  {$ELSE}
-  SetFontAntialiasing(Font, DEFAULT_QUALITY);
-  {$ENDIF}
-end;
-
-procedure TBitmap32.RenderTextW(X, Y: Integer; const Text: Widestring; AALevel: Integer; Color: TColor32);
-var
-  B, B2: TBitmap32;
-  Sz: TSize;
-  Alpha: TColor32;
-  StockCanvas: TCanvas;
-  PaddedText: Widestring;
-begin
-  if Empty then Exit;
-
-  Alpha := Color shr 24;
-  Color := Color and $00FFFFFF;
-  AALevel := Constrain(AALevel, -1, 4);
-  PaddedText := Text + ' ';
-
-  {$IFDEF FPC}
-  if AALevel > -1 then
-    Font.Quality := fqNonAntialiased
-  else
-    Font.Quality := fqAntialiased;
-  {$ELSE}
-  if AALevel > -1 then
-    SetFontAntialiasing(Font, NONANTIALIASED_QUALITY)
-  else
-    SetFontAntialiasing(Font, ANTIALIASED_QUALITY);
-  {$ENDIF}
-
-  { TODO : Optimize Clipping here }
-  B := TBitmap32.Create;
-  try
-    if AALevel <= 0 then
-    begin
-      Sz := TextExtentW(PaddedText);
-      B.SetSize(Sz.cX, Sz.cY);
-      B.Font := Font;
-      B.Clear(0);
-      B.Font.Color := clWhite;
-      B.TextoutW(0, 0, Text);
-      TextBlueToAlpha(B, Color);
-    end
-    else
-    begin
-      StockCanvas := StockBitmap.Canvas;
-      StockCanvas.Lock;
-      try
-        StockCanvas.Font := Font;
-        StockCanvas.Font.Size := Font.Size shl AALevel;
-{$IFDEF PLATFORM_INDEPENDENT}
-        Sz := StockCanvas.TextExtent(PaddedText);
-{$ELSE}
-        Windows.GetTextExtentPoint32W(StockCanvas.Handle, PWideChar(PaddedText),
-          Length(PaddedText), Sz);
-{$ENDIF}
-        Sz.Cx := (Sz.cx shr AALevel + 1) shl AALevel;
-        Sz.Cy := (Sz.cy shr AALevel + 1) shl AALevel;
-        B2 := TBitmap32.Create;
-        try
-          B2.SetSize(Sz.Cx, Sz.Cy);
-          B2.Clear(0);
-          B2.Font := StockCanvas.Font;
-          B2.Font.Color := clWhite;
-          B2.TextoutW(0, 0, Text);
-          B.SetSize(Sz.cx shr AALevel, Sz.cy shr AALevel);
-          TextScaleDown(B, B2, AALevel, Color);
-        finally
-          B2.Free;
-        end;
-      finally
-        StockCanvas.Unlock;
-      end;
-    end;
-
-    B.DrawMode := dmBlend;
-    B.MasterAlpha := Alpha;
-    B.CombineMode := CombineMode;
-
-    B.DrawTo(Self, X, Y);
-  finally
-    B.Free;
-  end;
-
-  {$IFDEF FPC}
-  Font.Quality := fqDefault;
-  {$ELSE}
-  SetFontAntialiasing(Font, DEFAULT_QUALITY);
-  {$ENDIF}
-end;
-
-// -------------------------------------------------------------------
-
-function TBitmap32.CanvasAllocated: Boolean;
-begin
-  Result := (FBackend as ICanvasSupport).CanvasAllocated;
-end;
-
-procedure TBitmap32.DeleteCanvas;
-begin
-  if Supports(Backend, ICanvasSupport) then
-    (FBackend as ICanvasSupport).DeleteCanvas;
 end;
 
 
@@ -6529,5 +5724,6 @@ initialization
 
 finalization
   StockBitmap.Free;
+
 
 end.

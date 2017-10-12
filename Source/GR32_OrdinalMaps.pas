@@ -39,14 +39,6 @@ interface
 {$I GR32.inc}
 
 uses
-{$IFDEF FPC}
-  Controls, Graphics,
-  {$IFDEF Windows}
-    Windows,
-  {$ENDIF}
-{$ELSE}
-  Windows, Controls, Graphics,
-{$ENDIF}
   Classes, SysUtils, GR32;
 
 type

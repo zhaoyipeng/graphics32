@@ -38,20 +38,12 @@ interface
 {$I GR32.inc}
 
 uses
-{$IFDEF FPC}
-  {$IFDEF Windows}
-  Windows,
-  {$ELSE}
-  Types,
-  {$ENDIF}
-{$ELSE}
-  Windows,
-{$ENDIF}
+  System.Types,
   RTLConsts,
   GR32, SysUtils, Classes, TypInfo;
 
 const
-  BUCKET_MASK = $FF;               
+  BUCKET_MASK = $FF;
   BUCKET_COUNT = BUCKET_MASK + 1;  // 256 buckets by default
 
 type
@@ -74,7 +66,7 @@ type
   end;
   TPointerBucketArray = array[0..BUCKET_MASK] of TPointerBucket;
 
-  { TPointerMap } 
+  { TPointerMap }
   { Associative pointer map
     Inspired by TBucketList, which is not available on D5/CB5, it is
     reimplemented from scratch, simple, optimized and light-weight.
@@ -256,14 +248,14 @@ begin
       if PropType^.Kind = tkClass then
       begin
         // TODO DVT Added cast to fix ShortString to String warnings. Need to verify is OK
-        SubDst := TPersistent(GetObjectProp(Dst, string(Name)));
+        SubDst := TPersistent(GetObjectProp(Dst, Props^[I]));
         if not Assigned(SubDst) then Continue;
 
-        SubSrc := TPersistent(GetObjectProp(Src, string(Name)));
+        SubSrc := TPersistent(GetObjectProp(Src, Props^[I]));
         if Assigned(SubSrc) then SubDst.Assign(SubSrc);
       end
       else
-        SetPropValue(Dst, string(Name), GetPropValue(Src, string(Name), True));
+        SetPropValue(Dst, Props^[I], GetPropValue(Src, Props^[I], True));
     end;
   finally
     FreeMem(Props, Count * SizeOf(PPropInfo));
@@ -587,7 +579,7 @@ end;
 function TRectList.IndexOf(const Rect: TRect): Integer;
 begin
   Result := 0;
-  while (Result < FCount) and not EqualRect(FList^[Result], Rect) do
+  while (Result < FCount) and not GR32.EqualRect(FList^[Result], Rect) do
     Inc(Result);
   if Result = FCount then
     Result := -1;

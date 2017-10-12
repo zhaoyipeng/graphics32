@@ -42,11 +42,7 @@ interface
 {$I GR32.inc}
 
 uses
-{$IFDEF FPC}
-  LCLIntf,
-{$ELSE}
-  Windows,
-{$ENDIF}
+  System.Types,
   SysUtils, Classes, GR32, GR32_VectorMaps, GR32_Rasterizers;
 
 type
@@ -554,7 +550,7 @@ var
   DstRect: TRect;
   Transformer: TTransformer;
 begin
-  IntersectRect(DstRect, DstClip, Dst.ClipRect);
+  GR32.IntersectRect(DstRect, DstClip, Dst.ClipRect);
 
   if (DstRect.Right < DstRect.Left) or (DstRect.Bottom < DstRect.Top) then Exit;
 
@@ -576,7 +572,7 @@ procedure SetBorderTransparent(ABitmap: TCustomBitmap32; ARect: TRect);
 var
   I: Integer;
 begin
-  IntersectRect(ARect, ARect, ABitmap.BoundsRect);
+  GR32.IntersectRect(ARect, ARect, ABitmap.BoundsRect);
   with ARect, ABitmap do
   if (Right > Left) and (Bottom > Top) and
     (Left < ClipRect.Right) and (Top < ClipRect.Bottom) and
@@ -1337,7 +1333,7 @@ begin
   FPiW := (Pi / (FSrcRect.Right - FSrcRect.Left));
   FPiH := (Pi / (FSrcRect.Bottom - FSrcRect.Top));
   FBP := FBloatPower * Max(FSrcRect.Right - FSrcRect.Left, FSrcRect.Bottom - FSrcRect.Top);
-  TransformValid := True;  
+  TransformValid := True;
 end;
 
 procedure TBloatTransformation.ReverseTransformFloat(DstX, DstY: TFloat;
@@ -1395,7 +1391,7 @@ begin
     if Faw <> 0 then Faw := 1 / Faw;
     Faw := Faw * FMinR
   end;
-  TransformValid := True;  
+  TransformValid := True;
 end;
 
 procedure TFishEyeTransformation.ReverseTransformFloat(DstX, DstY: TFloat;
@@ -1634,7 +1630,7 @@ end;
 procedure TDisturbanceTransformation.SetDisturbance(const Value: TFloat);
 begin
   FDisturbance := Value;
-  Changed;  
+  Changed;
 end;
 
 { TRemapTransformation }
@@ -1764,7 +1760,7 @@ begin
   FScalingFixed.Y := Fixed(Sy);
   FScalingFloat.X := Sx;
   FScalingFloat.Y := Sy;
-  Changed;  
+  Changed;
 end;
 
 procedure TRemapTransformation.SetMappingRect(Rect: TFloatRect);
@@ -1791,8 +1787,8 @@ var
   ProgressionX, ProgressionY: TFixed;
   MapPtr: PFixedPointArray;
 begin
-  IntersectRect(DstRect, VectorMap.BoundsRect, DstRect);
-  if IsRectEmpty(DstRect) then Exit;
+  GR32.IntersectRect(DstRect, VectorMap.BoundsRect, DstRect);
+  if GR32.IsRectEmpty(DstRect) then Exit;
 
   if not TTransformationAccess(Transformation).TransformValid then
     TTransformationAccess(Transformation).PrepareTransform;
@@ -1914,5 +1910,6 @@ end;
 
 initialization
   RegisterBindings;
+finalization
 
 end.

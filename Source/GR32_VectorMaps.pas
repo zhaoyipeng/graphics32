@@ -34,18 +34,13 @@ unit GR32_VectorMaps;
  * ***** END LICENSE BLOCK ***** *)
 
 interface
-     
+
 {$I GR32.inc}
 
 uses
-{$IFDEF FPC}
-  {$IFDEF Windows}
-    Windows,
-  {$ENDIF}
-{$ELSE}
-  Windows,
-{$ENDIF}
-  Classes, GR32;
+  Classes,
+  System.Types,
+  GR32;
 
 type
   TFixedVector = TFixedPoint;
@@ -347,15 +342,15 @@ var
 begin
   if Src.Empty then Exception.Create(RCStrSrcIsEmpty);
   if Empty then Exception.Create(RCStrBaseIsEmpty);
-  IntersectRect( SrcRect, Src.BoundsRect, SrcRect);
+  GR32.IntersectRect( SrcRect, Src.BoundsRect, SrcRect);
 
   DstRect.Left := DstLeft;
   DstRect.Top := DstTop;
   DstRect.Right := DstLeft + (SrcRect.Right - SrcRect.Left);
   DstRect.Bottom := DstTop + (SrcRect.Bottom - SrcRect.Top);
 
-  IntersectRect(DstRect, BoundsRect, DstRect);
-  if IsRectEmpty(DstRect) then Exit;
+  GR32.IntersectRect(DstRect, BoundsRect, DstRect);
+  if GR32.IsRectEmpty(DstRect) then Exit;
 
   P := SrcRect.Top * Src.Width;
   Progression.Y := - FixedOne;
@@ -641,7 +636,7 @@ begin
 
   end;
   RightDone:
-  if IsRectEmpty(Result) then
+  if GR32.IsRectEmpty(Result) then
     Result := Rect(0, 0, 0, 0);
 end;
 

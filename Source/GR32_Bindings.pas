@@ -260,4 +260,4 @@ initialization
 finalization
   FreeRegisters;
 
-end.
+end.
