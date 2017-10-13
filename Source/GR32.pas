@@ -2051,7 +2051,7 @@ begin
   inherited;
 end;
 
-class function TPlainInterfacedPersistent.NewInstance: TObject;
+class function TPlainInterfacedPersistent.NewInstance: TObject;  {$IFDEF AUTOREFCOUNT} unsafe; {$ENDIF}  // FIX from aone for ios
 begin
   Result := inherited NewInstance;
 
@@ -4907,7 +4907,7 @@ begin
   end
   else
   begin
-    Stream.Seek(-SizeOf(TBmpHeader), soFromCurrent);
+    Stream.Seek(Int64(-SizeOf(TBmpHeader)), soFromCurrent);    // patch from aone
     B := TBitmap.Create;
     try
       B.LoadFromStream(Stream);
