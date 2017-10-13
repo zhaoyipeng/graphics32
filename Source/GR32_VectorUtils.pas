@@ -2427,7 +2427,10 @@ begin
     end;
   end;
 
-  if Length(Result[J]) = 0 then SetLength(Result, J);
+  //if Length(Result[J]) = 0 then SetLength(Result, J);
+  // Changed by Zhaoyipeng
+  // 2017-10-13
+  if (J >=0) and (Length(Result[J]) = 0) then SetLength(Result, J);
 end;
 
 function BuildDashedLine(const Points: TArrayOfFixedPoint;

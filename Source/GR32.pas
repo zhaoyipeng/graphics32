@@ -253,6 +253,7 @@ const
   clTrBlue32              = TColor32($7F0000FF);
 
 // Color construction and conversion functions
+function Color32(AlphaColor: TAlphaColor): TColor32; overload;
 function Color32(R, G, B: Byte; A: Byte = $FF): TColor32; overload;
 function Color32(Index: Byte; var Palette: TPalette32): TColor32; overload;
 function Gray32(Intensity: Byte; Alpha: Byte = $FF): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -1107,6 +1108,19 @@ const
 {$IFDEF TARGET_X64}
 {$DEFINE USENATIVECODE}
 {$ENDIF}
+
+function Color32(AlphaColor: TAlphaColor): TColor32; overload;
+var
+  R: TAlphaColorRec;
+  E: TColor32Entry;
+begin
+  R.Color := AlphaColor;
+  E.A := R.A;
+  E.R := R.R;
+  E.G := R.G;
+  E.B := R.B;
+  Result := E.ARGB;
+end;
 
 function Color32(R, G, B: Byte; A: Byte = $FF): TColor32; overload;
 {$IFDEF USENATIVECODE}

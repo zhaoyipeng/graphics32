@@ -1,0 +1,72 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 686
+  ClientWidth = 555
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnShow = TrackBar1Change
+  DesignerMasterStyle = 3
+  object Image1: TImage
+    MultiResBitmap = <
+      item
+      end>
+    Align = Client
+    Size.Width = 555.000000000000000000
+    Size.Height = 518.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object ToolBar1: TToolBar
+    Padding.Left = 5.000000000000000000
+    Padding.Top = 5.000000000000000000
+    Padding.Right = 5.000000000000000000
+    Padding.Bottom = 5.000000000000000000
+    Size.Width = 555.000000000000000000
+    Size.Height = 48.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object TrackBar1: TTrackBar
+      Align = VertCenter
+      CanParentFocus = True
+      Min = 1.000000000000000000
+      Orientation = Horizontal
+      Position.X = 76.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 474.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Value = 20.000000000000000000
+      OnChange = TrackBar1Change
+    end
+    object DashChk: TCheckBox
+      Align = Left
+      IsChecked = True
+      Position.X = 5.000000000000000000
+      Position.Y = 5.000000000000000000
+      Size.Width = 71.000000000000000000
+      Size.Height = 38.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Dash'
+      OnChange = TrackBar1Change
+    end
+  end
+  object Panel1: TPanel
+    Align = Bottom
+    Position.Y = 566.000000000000000000
+    Size.Width = 555.000000000000000000
+    Size.Height = 120.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    object Button1: TButton
+      Position.X = 192.000000000000000000
+      Position.Y = 40.000000000000000000
+      TabOrder = 0
+      Text = 'Button1'
+      OnClick = TrackBar1Change
+    end
+  end
+end
