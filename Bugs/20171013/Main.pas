@@ -9,7 +9,7 @@ uses
   GR32_Polygons,
 
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Objects;
+  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Objects, FMX.Layouts;
 
 type
   TForm1 = class(TForm)
@@ -17,7 +17,7 @@ type
     TrackBar1: TTrackBar;
     DashChk: TCheckBox;
     ToolBar1: TToolBar;
-    Panel1: TPanel;
+    Panel1: TLayout;
     Button1: TButton;
     procedure TrackBar1Change(Sender: TObject);
   private
