@@ -12,3 +12,10 @@ This version just used in my research, not all functions of G32 ported to this v
 这个版本用于我个人的研究，并没有将所有G32的功能移植过来，如果需要更多的功能，可以给我发邮件: zhaoyipeng73@qq.com
 
 ![FMXGR32Demo](Snapshots/FMXGR32Demo.gif) 
+
+
+# Site Links
+	
+## [learndelphi](//learndelphi.org)
+
+## [embarcadero](//embarcadero.com)
